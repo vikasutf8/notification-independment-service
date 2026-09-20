@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Authentication filter for API requests.
@@ -38,14 +39,15 @@ public class NotificationAuthFilter implements Filter {
 
                 // Check if request path starts with /api
                 if (requestPath.startsWith(ApplicationConstants.API_PREFIX)) {
-                    String tenantId = httpRequest.getHeader(ApplicationConstants.TENANT_ID_HEADER);
+                    String tenantIdHeader = httpRequest.getHeader(ApplicationConstants.TENANT_ID_HEADER);
 
                     // Validate tenant ID is present and not empty
-                    if (UtilsMehtods.isEmpty(tenantId)) {
+                    if (UtilsMehtods.isEmpty(tenantIdHeader)) {
                         throw new UnauthorizedException(ApplicationConstants.TENANT_ID_MISSING);
                     }
 
-                    // Set tenant ID in NotificationContextHolder
+                    // Convert String to UUID and set tenant ID in NotificationContextHolder
+                    UUID tenantId = UUID.fromString(tenantIdHeader);
                     NotificationContextHolder.setContext(new NotificationContext(tenantId));
                 }
             }

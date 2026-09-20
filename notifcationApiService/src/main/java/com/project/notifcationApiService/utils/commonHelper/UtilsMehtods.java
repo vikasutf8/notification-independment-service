@@ -15,4 +15,8 @@ public class UtilsMehtods {
     public static boolean isEmpty(final Object obj) {
         return ObjectUtils.isEmpty(obj);
     }
+
+    public static long getCurrentTimeInMillis() {
+        return System.currentTimeMillis();
+    }
 }
