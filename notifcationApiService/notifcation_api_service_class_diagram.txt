@@ -1,0 +1,150 @@
+# Class Diagram: Notification API Service
+
+```mermaid
+diagram TD
+    %% Global Exception Hierarchy
+    A[ApplicationException] -->|extends| B[GlobalException]
+
+    B -->|implements| C[ErrorResponse]
+
+    %% Specific Exception Classes
+    D[ResourceNotFoundException] --> B
+    E[InvalidRequestException] --> B
+    F[ServiceUnavailableException] --> B
+    G[DatabaseException] --> B
+    H[ValidationException] --> B
+
+    %% Handler Classes
+    I[GlobalExceptionHandler] -->|handles| B
+    I -->|uses| C
+
+    %% Main Application
+    J[NotifcationApiServiceApplication] -->|extends| K[SpringBootApplication]
+
+    %% Style Configuration
+    style A fill:#e8f4f8,stroke:#333,stroke-width:2px
+    style B fill:#f0f8ff,stroke:#333,stroke-width:2px
+    style D fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style E fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style F fill:#e0f2f1,stroke:#2e7d32,stroke-width:2px
+    style G fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style H fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style I fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style J fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style K fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style C fill:#fffde7,stroke:#333,stroke-width:2px
+```
+
+## Class Relationships
+
+### 1. ApplicationException (Abstract Base)
+- **Package**: `com.project.notifcationApiService.exception`
+- **Type**: Abstract class
+- **Purpose**: Base exception for all application exceptions
+- **Extends**: `RuntimeException`
+- **Implements**: Error reporting interface
+
+### 2. GlobalException (Concrete Exception Class)
+- **Package**: `com.project.notifcationApiService.exception`
+- **Type**: Concrete exception class
+- **Purpose**: Primary exception class for error handling
+- **Attributes**:
+  - `errorCode: String` - Unique error identifier
+  - `message: String` - Human-readable error message
+  - `details: Object` - Additional error details
+  - `httpStatus: HttpStatus` - HTTP status code
+
+### 3. Specific Exception Classes
+
+#### 3.1 ResourceNotFoundException
+- **Type**: RuntimeException
+- **Purpose**: Thrown when a requested resource cannot be found
+- **HTTP Status**: 404 Not Found
+- **Error Code**: RESOURCE_NOT_FOUND
+
+#### 3.2 InvalidRequestException
+- **Type**: RuntimeException
+- **Purpose**: Thrown when client sends invalid request
+- **HTTP Status**: 400 Bad Request
+- **Error Code**: INVALID_REQUEST
+
+#### 3.3 ServiceUnavailableException
+- **Type**: RuntimeException
+- **Purpose**: Thrown when service operation cannot be completed
+- **HTTP Status**: 503 Service Unavailable
+- **Error Code**: SERVICE_UNAVAILABLE
+
+#### 3.4 DatabaseException
+- **Type**: RuntimeException
+- **Purpose**: Thrown when database operation fails
+- **HTTP Status**: 500 Internal Server Error
+- **Error Code**: DATABASE_ERROR
+
+#### 3.5 ValidationException
+- **Type**: RuntimeException
+- **Purpose**: Thrown when input validation fails
+- **HTTP Status**: 422 Unprocessable Entity
+- **Error Code**: VALIDATION_FAILED
+
+### 4. GlobalExceptionHandler (Controller Advice)
+- **Package**: `com.project.notifcationApiService.exception.handler`
+- **Type**: Controller advice
+- **Purpose**: Centralized exception handling
+- **Extends**: `ResponseEntityExceptionHandler`
+- **Responsibility**: Convert exceptions to standardized error responses
+
+### 5. ErrorResponse (DTO/Record)
+- **Package**: `com.project.notifcationApiService.utils`
+- **Type**: Record (Java 14+)
+- **Purpose**: Standardized error response structure
+- **Fields**:
+  - `errorCode: String` - Error code
+  - `message: String` - Error message
+  - `timestamp: String` - ISO 8601 timestamp
+  - `details: Object` - Optional error details
+
+### 6. NotifcationApiServiceApplication
+- **Package**: `com.project.notifcationApiService`
+- **Type**: Main application class
+- **Purpose**: Entry point for Spring Boot application
+- **Annotations**: `@SpringBootApplication`
+
+## Implementation Details
+
+### Exception Hierarchy
+- `ApplicationException` (Abstract) → `GlobalException`
+- ↓
+- `ResourceNotFoundException`, `InvalidRequestException`, `ServiceUnavailableException`, `DatabaseException`, `ValidationException`
+
+### Handler Pattern
+- `GlobalExceptionHandler` handles all exceptions extending `GlobalException`
+- Converts exceptions to `ErrorResponse` DTO
+- Uses Spring's `ResponseEntityExceptionHandler` for best practices
+
+### Error Response Structure
+```json
+{
+  "errorCode": "RESOURCE_NOT_FOUND",
+  "message": "Resource User with id '123' not found.",
+  "timestamp": "2026-09-20T10:30:00.000Z",
+  "details": null
+}
+```
+
+## Design Principles Applied
+
+1. **Single Responsibility**: Each exception class has a specific purpose
+2. **Open/Closed**: Easy to add new exception types without modifying existing code
+3. **Liskov Substitution**: All exceptions can be used interchangeably through base class
+4. **Dependency Inversion**: Handler depends on abstractions, not concrete exceptions
+5. **Standardization**: Consistent error response format across all exceptions
+6. **Testability**: Each component can be tested independently
+
+## Benefits of This Design
+
+1. **Consistency**: All exceptions follow the same pattern
+2. **Maintainability**: Easy to add new error types and handlers
+3. **Testability**: Each component can be unit tested in isolation
+4. **Client-Friendly**: Standardized error responses for API clients
+5. **Scalability**: Exception handling logic is centralized
+6. **Debugging**: Rich error information aids troubleshooting
