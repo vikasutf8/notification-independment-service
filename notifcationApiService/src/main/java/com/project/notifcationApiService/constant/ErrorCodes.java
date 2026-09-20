@@ -42,6 +42,10 @@ public final class ErrorCodes {
     public static final String INVALID_REQUEST_FORMAT = "INVALID_REQUEST_FORMAT";
     public static final String INVALID_REQUEST_BODY = "INVALID_REQUEST_BODY";
 
+    // Authentication & Authorization Errors
+    public static final String UNAUTHORIZED = "UNAUTHORIZED";
+    public static final String FORBIDDEN = "FORBIDDEN";
+
     // Internal Server Errors
     public static final String INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
     public static final String INTERNAL_ERROR_UNEXPECTED = "INTERNAL_ERROR_UNEXPECTED";
