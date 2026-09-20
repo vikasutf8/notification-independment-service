@@ -2,11 +2,9 @@ package com.project.notifcationApiService.models.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import org.springframework.data.annotation.Id;
 
 import java.util.UUID;
-
-import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.getCurrentTimeInMillis;
 
 /**
  * Abstract base entity for all MongoDB documents.
@@ -17,7 +15,8 @@ import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.
 @NoArgsConstructor
 public abstract class AbstractEntity {
 
-
+    @Id
+    protected UUID id = UUID.randomUUID();
 
     protected Long createdAt;
 
@@ -27,8 +26,8 @@ public abstract class AbstractEntity {
      * Called before saving new entity to database.
      * Sets createdAt and updatedAt timestamps.
      */
-    protected void entityCreateAt() {
-        Long currentTime = getCurrentTimeInMillis();
+    protected void prePersist() {
+        Long currentTime = System.currentTimeMillis();
         if (this.createdAt == null) {
             this.createdAt = currentTime;
         }
@@ -39,7 +38,7 @@ public abstract class AbstractEntity {
      * Called before updating entity in database.
      * Updates the updatedAt timestamp.
      */
-    protected void entityUpdateAt() {
-        this.updatedAt = getCurrentTimeInMillis();
+    protected void preUpdate() {
+        this.updatedAt = System.currentTimeMillis();
     }
 }

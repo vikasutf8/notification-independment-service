@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,11 +16,13 @@ import java.util.UUID;
 /**
  * Template entity for storing notification templates in MongoDB.
  * Each template is stored per tenant and contains template variables and message format.
+ * Includes flow status to track template lifecycle.
  */
 @Document(collection = "templates")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EqualsAndHashCode(callSuper = true)
 public class Template extends AbstractEntity {
 
@@ -34,4 +37,9 @@ public class Template extends AbstractEntity {
 
     @NotNull(message = "Tenant ID cannot be null")
     private UUID tenantId;
+
+    @NotNull(message = " ID cannot be null")
+    private UUID id;
+
+
 }
