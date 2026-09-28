@@ -1,11 +1,16 @@
 package com.project.notifcationApiService.pubsub.publisher;
 
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.project.notifcationApiService.config.beanConfig.ApplicationProperties;
+import com.project.notifcationApiService.exception.ServiceUnavailableException;
 import com.project.notifcationApiService.pubsub.fallback.GenericFallback;
 import com.project.notifcationApiService.pubsub.primary.GenericProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,11 +27,37 @@ public class GenericPublisherImpl implements GenericPublisher {
 
     private final List<GenericProvider> providers;
     private final List<GenericFallback> fallbacks;
+    private ObjectMapper mapper;
+    private ApplicationProperties applicationProperties;
 
     public GenericPublisherImpl(ObjectProvider<List<GenericProvider>> providers,
-                                ObjectProvider<List<GenericFallback>> fallbacks) {
+                                ObjectProvider<List<GenericFallback>> fallbacks, ObjectMapper mapper) {
         this.providers = providers.getIfAvailable(Collections::emptyList);
         this.fallbacks = fallbacks.getIfAvailable(Collections::emptyList);
+        this.mapper =mapper;
+    }
+
+    @Override
+    public void sendDataToInjest(final Object message) {
+        // Implementation for sending data to injest
+
+        sendNotification(applicationProperties.getIngestTopic(), convertDataIntoString(message));
+    }
+
+    @Override
+    public void sendDataToAudit(final Object message) {
+        // Implementation for sending data to audit
+
+        sendNotification(applicationProperties.getAuditTopic(), convertDataIntoString(message));
+
+    }
+
+    public String convertDataIntoString(Object message) {
+        try {
+            return mapper.writeValueAsString(message);
+        } catch (JsonProcessingException e) {
+                throw new ServiceUnavailableException("Failed to convert message to JSON string: " + e.getMessage(), e);
+        }
     }
 
     @Override

@@ -7,6 +7,10 @@ package com.project.notifcationApiService.pubsub.publisher;
  */
 public interface GenericPublisher {
 
+    void sendDataToInjest(Object message);
+
+    void sendDataToAudit(Object message);
+
     /**
      * Publish an event to the given topic.
      *

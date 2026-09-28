@@ -54,42 +54,34 @@ public class NotificationServiceImpl implements NotificationService {
      * @throws ValidationException if required template variables are missing
      */
     @Override
-    public SendNotificationResponse sendNotification(SendNotificationRequest request) {
-        // Extract tenant ID from context
+    public SendNotificationResponse sendNotification(
+            SendNotificationRequest request) {
+
+        // 1. Extract tenant ID
         var tenantId = UtilsMehtods.getCurrentTenantId();
 
-        // 1. Check template exists for this tenant via id + tenantId
-        Template template = templateDao.findByIdAndTenantId(request.getTemplateId(), tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format(ErrorMessages.TEMPLATE_NOT_FOUND, request.getTemplateId())));
-    // in or else throw we can also pushing/publising in kafka topic "aduit" and throw expections and return it
+        // 2. Find template for this tenant
+        Template template = templateDao
+                .findByIdAndTenantId(
+                        request.getTemplateId(),
+                        tenantId
+                )
+                .orElseThrow(() -> {
 
+                    // Template not found -> publish audit event
+                    genericPublisher.sendDataToAudit(request);
 
-//        Map<String, Object> variables = request.getDynamicVariables() == null
-//                ? Map.of()
-//                : request.getDynamicVariables();
+                    // Then throw exception
+                    return new ResourceNotFoundException(
+                            String.format(
+                                    ErrorMessages.TEMPLATE_NOT_FOUND,
+                                    request.getTemplateId()
+                            )
+                    );
+                });
 
-//        // 2. Every variable declared on the template must be supplied
-//        List<String> missing = new ArrayList<>();
-//        if (UtilsMehtods.isNotEmpty(template.getTemplateVariables())) {
-//            for (String key : template.getTemplateVariables().keySet()) {
-//                if (!variables.containsKey(key) || variables.get(key) == null) {
-//                    missing.add(key);
-//                }
-//            }
-//        }
-//        if (!missing.isEmpty()) {
-//            throw new ValidationException(
-//                    String.format(ErrorMessages.NOTIFICATION_MISSING_VARIABLES,
-//                            String.join(", ", missing)),
-//                    tenantId
-//            );
-//        }
-
-
-        //2. after its existing ...push in ingestdto as we InjestTopicDto vai builder design patter
+        // 3. Template exists -> build ingest event
         InjestTopicDto injestTopicDto = InjestTopicDto.builder()
-//                .requestId(request) MDC --distributed tracing
                 .requestId(getRequestIDContext())
                 .tenantId(tenantId.toString())
                 .recivedAt(getCurrentTimeInMillis())
@@ -97,13 +89,12 @@ public class NotificationServiceImpl implements NotificationService {
                 .notificationType(request.getNotificationType())
                 .dynamicVariables(request.getDynamicVariables())
                 .build();
-    // pusblish in kafka topic "ingest" for processor service to process and send notification
-        boolean published = genericPublisher.sendNotification(ingestTopic, injestTopicDto);
-        if (!published) {
-            log.error("Failed to publish ingest event for template '{}' (requestId='{}')",
-                    request.getTemplateId(), injestTopicDto.getRequestId());
-        }
 
+        // 4. Publish to ingest topic
+        // Processor service will consume this event
+        genericPublisher.sendDataToInjest(injestTopicDto);
+
+        // 5. Return response
         return SendNotificationResponse.builder()
                 .templateId(request.getTemplateId())
                 .templateName(template.getMessageTemplate())
@@ -111,6 +102,5 @@ public class NotificationServiceImpl implements NotificationService {
                 .message("ingest topic set")
                 .build();
     }
-
 
 }

@@ -6,11 +6,17 @@ app:
   pubsub:
     kafka:
       enabled: true
-      topic: ingest
       send-timeout-ms: 5000
+
+      topics:
+        ingest-topic: notification.ingest
+        audit-topic: notification.audit
+
     sqs:
       enabled: false
+
     mqtt:
       enabled: false
+
     rabbitmq:
       enabled: false
