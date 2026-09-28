@@ -1,0 +1,9 @@
+package com.project.notifcationApiService.pubsub.interfaces;
+
+import com.project.notifcationApiService.pubsub.primary.GenericProvider;
+
+/**
+ * Primary AWS SQS provider contract.
+ */
+public interface AwsSqsProvider extends GenericProvider {
+}

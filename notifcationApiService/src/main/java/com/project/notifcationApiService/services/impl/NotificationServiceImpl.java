@@ -8,9 +8,12 @@ import com.project.notifcationApiService.models.entity.Template;
 import com.project.notifcationApiService.models.request.SendNotificationRequest;
 import com.project.notifcationApiService.models.request.kafka.InjestTopicDto;
 import com.project.notifcationApiService.models.response.SendNotificationResponse;
+import com.project.notifcationApiService.pubsub.publisher.GenericPublisher;
 import com.project.notifcationApiService.services.interfaces.NotificationService;
 import com.project.notifcationApiService.utils.commonHelper.UtilsMehtods;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -28,11 +31,16 @@ import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{\\{(.+?)}}");
 
     private final TemplateDao templateDao;
+    private final GenericPublisher genericPublisher;
+
+    @Value("${app.pubsub.kafka.topic:ingest}")
+    private String ingestTopic;
 
     /**
      * Send a notification using a stored template.
@@ -90,11 +98,11 @@ public class NotificationServiceImpl implements NotificationService {
                 .dynamicVariables(request.getDynamicVariables())
                 .build();
     // pusblish in kafka topic "ingest" for processor service to process and send notification
-
-
-
-
-        // TODO: dispatch resolved notification (e.g. publish to Kafka for processor service)
+        boolean published = genericPublisher.sendNotification(ingestTopic, injestTopicDto);
+        if (!published) {
+            log.error("Failed to publish ingest event for template '{}' (requestId='{}')",
+                    request.getTemplateId(), injestTopicDto.getRequestId());
+        }
 
         return SendNotificationResponse.builder()
                 .templateId(request.getTemplateId())
