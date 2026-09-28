@@ -1,11 +1,9 @@
 package com.project.notifcationApiService.models.request;
 
+import com.project.notifcationApiService.models.entity.Template;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Map;
 
@@ -13,8 +11,7 @@ import java.util.Map;
  * Request DTO for creating or updating notification templates.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor
 @ToString
 public class TemplateRequest {
 
@@ -26,4 +23,6 @@ public class TemplateRequest {
 
     @NotBlank(message = "Message template cannot be blank")
     private String messageTemplate;
+
+
 }

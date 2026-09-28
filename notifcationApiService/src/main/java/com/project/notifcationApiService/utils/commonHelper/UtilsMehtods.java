@@ -1,6 +1,9 @@
 package com.project.notifcationApiService.utils.commonHelper;
 
+import com.project.notifcationApiService.models.contexts.NotificationContextHolder;
 import org.springframework.util.ObjectUtils;
+
+import java.util.UUID;
 
 public class UtilsMehtods {
 
@@ -18,5 +21,10 @@ public class UtilsMehtods {
 
     public static long getCurrentTimeInMillis() {
         return System.currentTimeMillis();
+    }
+
+    public static UUID getCurrentTenantId() {
+        var context = NotificationContextHolder.getContext();
+        return context.tenantId();
     }
 }

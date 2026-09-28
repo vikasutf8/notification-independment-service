@@ -1,16 +1,15 @@
 package com.project.notifcationApiService.controller;
 
+import com.project.notifcationApiService.models.request.TemplateFilterRequest;
 import com.project.notifcationApiService.models.request.TemplateRequest;
+import com.project.notifcationApiService.models.response.FilterTemplateResponse;
 import com.project.notifcationApiService.models.response.TemplateResponse;
 import com.project.notifcationApiService.services.interfaces.TemplateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * REST controller for template management.
@@ -37,4 +36,13 @@ public class TemplateController {
         TemplateResponse response = templateService.createTemplate(templateRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+
+    // generic searching api on template Enitity  on name, tenantId
+    @GetMapping
+    public ResponseEntity<FilterTemplateResponse> filterTemplates(TemplateFilterRequest templateFilterRequest) throws ReflectiveOperationException {
+        return ResponseEntity.ok(templateService.filterTemplates(templateFilterRequest));
+    }
+
+
 }

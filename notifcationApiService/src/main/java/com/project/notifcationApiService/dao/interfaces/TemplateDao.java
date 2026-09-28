@@ -1,6 +1,9 @@
 package com.project.notifcationApiService.dao.interfaces;
 
 import com.project.notifcationApiService.models.entity.Template;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -27,4 +30,6 @@ public interface TemplateDao {
      * @return Optional containing template if found
      */
     Optional<Template> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId);
+
+    Page<Template> filterTemplate(Example<Template> example, PageRequest pageRequest);
 }

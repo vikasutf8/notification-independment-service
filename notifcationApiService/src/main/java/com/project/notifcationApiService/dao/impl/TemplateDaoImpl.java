@@ -4,6 +4,9 @@ import com.project.notifcationApiService.dao.interfaces.TemplateDao;
 import com.project.notifcationApiService.dao.repositories.TemplateRepository;
 import com.project.notifcationApiService.models.entity.Template;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -41,5 +44,10 @@ public class TemplateDaoImpl implements TemplateDao {
     @Override
     public Optional<Template> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId) {
         return templateRepository.findByNameIgnoreCaseAndTenantId(name, tenantId);
+    }
+
+    @Override
+    public Page<Template> filterTemplate(final Example<Template> example, final PageRequest pageRequest) {
+        return templateRepository.findAll(example, pageRequest);
     }
 }

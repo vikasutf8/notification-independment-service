@@ -3,16 +3,20 @@ package com.project.notifcationApiService.services.impl;
 import com.project.notifcationApiService.constant.ErrorMessages;
 import com.project.notifcationApiService.dao.interfaces.TemplateDao;
 import com.project.notifcationApiService.exception.ValidationException;
-import com.project.notifcationApiService.models.contexts.NotificationContextHolder;
 import com.project.notifcationApiService.models.entity.Template;
+import com.project.notifcationApiService.models.request.TemplateFilterRequest;
 import com.project.notifcationApiService.models.request.TemplateRequest;
+import com.project.notifcationApiService.models.response.FilterTemplateResponse;
 import com.project.notifcationApiService.models.response.TemplateResponse;
 import com.project.notifcationApiService.services.interfaces.TemplateService;
 import com.project.notifcationApiService.utils.commonHelper.UtilsMehtods;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Service implementation for template operations.
@@ -35,8 +39,7 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public TemplateResponse createTemplate(TemplateRequest templateRequest) {
         // Extract tenant ID from context
-        var context = NotificationContextHolder.getContext();
-        var tenantId = context.tenantId();
+        var tenantId = UtilsMehtods.getCurrentTenantId();
 
         // Validate request
         if (UtilsMehtods.isEmpty(templateRequest.getName()) ||
@@ -73,5 +76,14 @@ public class TemplateServiceImpl implements TemplateService {
          templateDao.save(template);
 
          return new TemplateResponse(template);
+    }
+
+    @Override
+    public FilterTemplateResponse filterTemplates(TemplateFilterRequest templateFilterRequest) throws ReflectiveOperationException {
+
+Page<Template> templates =  templateDao.filterTemplate(templateFilterRequest.buildSearchExample(),
+                templateFilterRequest.buildPageRequest());
+        List<TemplateResponse> data =templates.stream().map(TemplateResponse::new).collect(Collectors.toList());
+        return new FilterTemplateResponse(data,templates.hasNext(), templates.getTotalElements());
     }
 }
