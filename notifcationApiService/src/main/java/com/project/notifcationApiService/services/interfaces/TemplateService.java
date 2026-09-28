@@ -18,5 +18,21 @@ public interface TemplateService {
      */
     TemplateResponse createTemplate(TemplateRequest templateRequest);
 
+    /**
+     * Update an existing template (same payload as create).
+     *
+     * @param id the template UUID from path variable
+     * @param templateRequest the template request DTO
+     * @return the updated template
+     */
+    TemplateResponse updateTemplate(java.util.UUID id, TemplateRequest templateRequest);
+
+    /**
+     * Delete a template by id, scoped to current tenant.
+     *
+     * @param id the template UUID from path variable
+     */
+    void deleteTemplate(java.util.UUID id);
+
     FilterTemplateResponse filterTemplates(TemplateFilterRequest templateFilterRequest) throws ReflectiveOperationException;
 }

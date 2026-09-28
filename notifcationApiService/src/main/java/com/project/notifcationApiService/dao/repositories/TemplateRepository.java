@@ -22,4 +22,13 @@ public interface TemplateRepository extends MongoRepository<Template, UUID> {
      * @return Optional containing template if found
      */
     Optional<Template> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId);
+
+    /**
+     * Find template by id and tenant ID (tenant-scoped lookup for update).
+     *
+     * @param id the template UUID from path variable
+     * @param tenantId the tenant UUID
+     * @return Optional containing template if found
+     */
+    Optional<Template> findByIdAndTenantId(UUID id, UUID tenantId);
 }

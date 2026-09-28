@@ -31,5 +31,21 @@ public interface TemplateDao {
      */
     Optional<Template> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId);
 
+    /**
+     * Find template by id and tenant ID.
+     *
+     * @param id the template UUID from path variable
+     * @param tenantId the tenant UUID
+     * @return Optional containing template if found
+     */
+    Optional<Template> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    /**
+     * Delete a template from database.
+     *
+     * @param template the template entity to delete
+     */
+    void delete(Template template);
+
     Page<Template> filterTemplate(Example<Template> example, PageRequest pageRequest);
 }
