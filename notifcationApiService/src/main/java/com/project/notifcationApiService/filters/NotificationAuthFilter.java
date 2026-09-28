@@ -12,10 +12,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.UUID;
+
+import static com.project.notifcationApiService.constant.ApplicationConstants.REQUEST_ID_HEADER;
+import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.randomGenerateUUID;
 
 /**
  * Authentication filter for API requests.
@@ -44,11 +48,15 @@ public class NotificationAuthFilter implements Filter {
                     // Validate tenant ID is present and not empty
                     if (UtilsMehtods.isEmpty(tenantIdHeader)) {
                         throw new UnauthorizedException(ApplicationConstants.TENANT_ID_MISSING);
+                        UUID requestId = randomGenerateUUID();
+                        MDC.put(REQUEST_ID_HEADER, String.valueOf(requestId));
+                        response.setHeader(REQUEST_ID_HEADER, String.valueOf(requestId));//TODO
                     }
+
 
                     // Convert String to UUID and set tenant ID in NotificationContextHolder
                     UUID tenantId = UUID.fromString(tenantIdHeader);
-                    NotificationContextHolder.setContext(new NotificationContext(tenantId));
+                    NotificationContextHolder.setContext(new NotificationContext(tenantId,false));
                 }
             }
             chain.doFilter(request, response);

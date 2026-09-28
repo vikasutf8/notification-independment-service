@@ -1,4 +1,4 @@
-package com.project.notifcationApiService.controller;
+package com.project.notifcationApiService.controller.template;
 
 import com.project.notifcationApiService.models.request.TemplateFilterRequest;
 import com.project.notifcationApiService.models.request.TemplateRequest;

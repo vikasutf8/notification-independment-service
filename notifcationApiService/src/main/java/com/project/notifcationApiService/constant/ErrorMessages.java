@@ -20,6 +20,11 @@ public final class ErrorMessages {
     public static final String TEMPLATE_NAME_BLANK = "Template name cannot be blank.";
     public static final String TEMPLATE_VARIABLES_EMPTY = "Template variables cannot be empty.";
     public static final String TEMPLATE_MESSAGE_BLANK = "Message template cannot be blank.";
+    public static final String TEMPLATE_ID_REQUIRED  = "Template ID cannot be blank.";
+
+    // Notification Errors
+    public static final String NOTIFICATION_TYPE_REQUIRED = "Notification type is required.";
+    public static final String NOTIFICATION_MISSING_VARIABLES = "Missing values for template variables: %s";
 
     // Validation Errors
     public static final String VALIDATION_FAILED = "Validation failed.";

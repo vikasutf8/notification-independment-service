@@ -14,8 +14,11 @@ public final class ApplicationConstants {
 
     // HTTP Headers
     public static final String TENANT_ID_HEADER = "X-Tenant-Id";
+    public  static final String REQUEST_ID_HEADER = "X-Request-Id";
 
     // Error Messages
     public static final String TENANT_ID_MISSING = "Unauthorized: X-Tenant-Id header is required.";
     public static final String INVALID_REQUEST_FORMAT = "Invalid request format.";
+
+
 }
