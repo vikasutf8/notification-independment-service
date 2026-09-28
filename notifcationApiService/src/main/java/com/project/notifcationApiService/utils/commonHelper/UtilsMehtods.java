@@ -7,7 +7,6 @@ import org.springframework.util.ObjectUtils;
 import java.util.UUID;
 
 import static com.project.notifcationApiService.constant.ApplicationConstants.REQUEST_ID_HEADER;
-
 public class UtilsMehtods {
 
     private UtilsMehtods() {
@@ -26,13 +25,16 @@ public class UtilsMehtods {
         return System.currentTimeMillis();
     }
 
-    public static UUID getCurrentTenantId() {
+    public static String getCurrentTenantId() {
         var context = NotificationContextHolder.getContext();
+        if (context == null || isEmpty(context.tenantId())) {
+            throw new IllegalStateException("Tenant context is missing for the current request.");
+        }
         return context.tenantId();
     }
 
-    public static UUID randomGenerateUUID() {
-        return UUID.randomUUID();
+    public static String randomGenerateUUID() {
+        return UUID.randomUUID().toString();
     }
 
     public static String getRequestIDContext(){

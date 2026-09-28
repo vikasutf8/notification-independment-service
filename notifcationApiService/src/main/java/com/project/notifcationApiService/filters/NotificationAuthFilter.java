@@ -1,72 +1,87 @@
 package com.project.notifcationApiService.filters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.notifcationApiService.constant.ApplicationConstants;
-import com.project.notifcationApiService.exception.UnauthorizedException;
+import com.project.notifcationApiService.constant.ErrorCodes;
 import com.project.notifcationApiService.models.contexts.NotificationContext;
 import com.project.notifcationApiService.models.contexts.NotificationContextHolder;
+import com.project.notifcationApiService.utils.commonHelper.ErrorResponse;
 import com.project.notifcationApiService.utils.commonHelper.UtilsMehtods;
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
 
 import static com.project.notifcationApiService.constant.ApplicationConstants.REQUEST_ID_HEADER;
-import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.randomGenerateUUID;
 
 /**
  * Authentication filter for API requests.
- * Validates that X-Tenant-Id header is present for all /api requests.
- * Sets the tenant ID in NotificationContextHolder for propagation across the request.
+ * Runs once per request; validates X-Tenant-Id for all /api requests,
+ * propagates tenant and request IDs via context and MDC.
+ * Missing or malformed tenant identity is rejected with 403 at filter level.
  */
 @Component
-public class NotificationAuthFilter implements Filter {
+@RequiredArgsConstructor
+public class NotificationAuthFilter extends OncePerRequestFilter {
+
+    private final ObjectMapper objectMapper;
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        // Initialization if needed
-    }
-
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
         try {
-            if (request instanceof HttpServletRequest httpRequest) {
-                String requestPath = httpRequest.getRequestURI();
+            if (request.getRequestURI().startsWith(ApplicationConstants.API_PREFIX)) {
+                String tenantIdHeader = request.getHeader(ApplicationConstants.TENANT_ID_HEADER);
 
-                // Check if request path starts with /api
-                if (requestPath.startsWith(ApplicationConstants.API_PREFIX)) {
-                    String tenantIdHeader = httpRequest.getHeader(ApplicationConstants.TENANT_ID_HEADER);
-
-                    // Validate tenant ID is present and not empty
-                    if (UtilsMehtods.isEmpty(tenantIdHeader)) {
-                        throw new UnauthorizedException(ApplicationConstants.TENANT_ID_MISSING);
-                        UUID requestId = randomGenerateUUID();
-                        MDC.put(REQUEST_ID_HEADER, String.valueOf(requestId));
-                        response.setHeader(REQUEST_ID_HEADER, String.valueOf(requestId));//TODO
-                    }
-
-
-                    // Convert String to UUID and set tenant ID in NotificationContextHolder
-                    UUID tenantId = UUID.fromString(tenantIdHeader);
-                    NotificationContextHolder.setContext(new NotificationContext(tenantId,false));
+                if (UtilsMehtods.isEmpty(tenantIdHeader)) {
+                    reject(response, ApplicationConstants.TENANT_ID_MISSING);
+                    return;
                 }
+
+                if (!isUuidFormat(tenantIdHeader.trim())) {
+                    reject(response, ApplicationConstants.TENANT_ID_INVALID);
+                    return;
+                }
+
+                String requestId = request.getHeader(REQUEST_ID_HEADER);
+                if (UtilsMehtods.isEmpty(requestId)) {
+                    requestId = UtilsMehtods.randomGenerateUUID();
+                }
+
+                MDC.put(REQUEST_ID_HEADER, requestId);
+                response.setHeader(REQUEST_ID_HEADER, requestId);
+                NotificationContextHolder.setContext(
+                        new NotificationContext(tenantIdHeader.trim(), requestId, false));
             }
             chain.doFilter(request, response);
         } finally {
             NotificationContextHolder.clearContext();
+            MDC.remove(REQUEST_ID_HEADER);
         }
     }
 
-    @Override
-    public void destroy() {
-        // Cleanup if needed
+    private boolean isUuidFormat(String value) {
+        try {
+            UUID.fromString(value);
+            return true;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+    private void reject(HttpServletResponse response, String message) throws IOException {
+        ErrorResponse body = ErrorResponse.of(
+                HttpServletResponse.SC_FORBIDDEN, ErrorCodes.FORBIDDEN + ": " + message);
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 }

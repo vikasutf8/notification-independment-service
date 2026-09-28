@@ -11,14 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 /**
  * REST controller for template management.
  * Handles template creation, retrieval, and updates.
  */
 @RestController
-@RequestMapping("/api/templates")
+@RequestMapping("/api/v1/templates")
 @RequiredArgsConstructor
 public class TemplateController {
 
@@ -45,13 +43,13 @@ public class TemplateController {
      * Tenant ID comes from request context, template id from path variable.
      * Validates template exists for tenant, then checks new name uniqueness.
      *
-     * @param id the template UUID from path variable
+     * @param id the template ID string (UUID format) from path variable
      * @param templateRequest the template request DTO with name, variables, and message
      * @return ResponseEntity containing the updated template response
      */
     @PutMapping("/{id}")
     public ResponseEntity<TemplateResponse> updateTemplate(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @Valid @RequestBody TemplateRequest templateRequest) {
 
         TemplateResponse response = templateService.updateTemplate(id, templateRequest);
@@ -63,11 +61,11 @@ public class TemplateController {
      * Tenant ID comes from request context, template id from path variable.
      * Only deletes if template belongs to the current tenant, else 404.
      *
-     * @param id the template UUID from path variable
+     * @param id the template ID string (UUID format) from path variable
      * @return 204 No Content on success
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTemplate(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteTemplate(@PathVariable String id) {
         templateService.deleteTemplate(id);
         return ResponseEntity.noContent().build();
     }

@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.getCurrentTimeInMillis;
 import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.getRequestIDContext;
@@ -32,8 +30,6 @@ import static com.project.notifcationApiService.utils.commonHelper.UtilsMehtods.
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationServiceImpl implements NotificationService {
-
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{\\{(.+?)}}");
 
     private final TemplateDao templateDao;
     private final GenericPublisher genericPublisher;
@@ -64,8 +60,13 @@ public class NotificationServiceImpl implements NotificationService {
                 )
                 .orElseThrow(() -> {
 
-                    // Template not found -> publish audit event
-//                    genericPublisher.sendDataToAudit(request);
+                    // Template not found -> publish audit event (best effort, never masks the 404)
+                    try {
+                        genericPublisher.sendDataToAudit(request);
+                    } catch (Exception auditEx) {
+                        log.error("Failed to publish audit event for missing template '{}': {}",
+                                request.getTemplateId(), auditEx.getMessage());
+                    }
 
                     // Then throw exception
                     return new ResourceNotFoundException(
@@ -76,10 +77,43 @@ public class NotificationServiceImpl implements NotificationService {
                     );
                 });
 
-        // 3. Template exists -> build ingest event
+        // 3. Validate dynamic variables: every variable declared on the template
+        // is required (non-null); undeclared extras are allowed; values must be scalar
+        Map<String, Object> variables = request.getDynamicVariables() == null
+                ? Map.of()
+                : request.getDynamicVariables();
+
+        List<String> missing = new ArrayList<>();
+        if (UtilsMehtods.isNotEmpty(template.getTemplateVariables())) {
+            for (String key : template.getTemplateVariables().keySet()) {
+                if (!variables.containsKey(key) || variables.get(key) == null) {
+                    missing.add(key);
+                }
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new ValidationException(
+                    String.format(ErrorMessages.NOTIFICATION_MISSING_VARIABLES,
+                            String.join(", ", missing)),
+                    tenantId
+            );
+        }
+
+        for (Map.Entry<String, Object> entry : variables.entrySet()) {
+            Object value = entry.getValue();
+            if (value != null && !(value instanceof String)
+                    && !(value instanceof Number) && !(value instanceof Boolean)) {
+                throw new ValidationException(
+                        String.format(ErrorMessages.NOTIFICATION_VARIABLE_NOT_SCALAR, entry.getKey()),
+                        tenantId
+                );
+            }
+        }
+
+        // 4. Template exists -> build ingest event
         InjestTopicDto injestTopicDto = InjestTopicDto.builder()
                 .requestId(getRequestIDContext())
-                .tenantId(tenantId.toString())
+                .tenantId(tenantId)
                 .recivedAt(getCurrentTimeInMillis())
                 .templateId(request.getTemplateId())
                 .notificationType(request.getNotificationType())

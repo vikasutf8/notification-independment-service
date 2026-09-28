@@ -3,6 +3,7 @@ package com.project.notifcationApiService.services.impl;
 import com.project.notifcationApiService.constant.ErrorMessages;
 import com.project.notifcationApiService.dao.interfaces.CacheService;
 import com.project.notifcationApiService.dao.interfaces.TemplateDao;
+import com.project.notifcationApiService.exception.InvalidRequestException;
 import com.project.notifcationApiService.exception.ResourceNotFoundException;
 import com.project.notifcationApiService.exception.ValidationException;
 import com.project.notifcationApiService.models.contexts.NotificationContext;
@@ -14,6 +15,7 @@ import com.project.notifcationApiService.models.response.FilterTemplateResponse;
 import com.project.notifcationApiService.models.response.TemplateResponse;
 import com.project.notifcationApiService.services.interfaces.TemplateService;
 import com.project.notifcationApiService.utils.commonHelper.UtilsMehtods;
+import com.project.notifcationApiService.utils.validator.TemplateValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 public class TemplateServiceImpl implements TemplateService {
 
     private final TemplateDao templateDao;
+    private final TemplateValidator templateValidator;
 
 
     /**
@@ -46,12 +49,8 @@ public class TemplateServiceImpl implements TemplateService {
         // Extract tenant ID from context
         var tenantId = UtilsMehtods.getCurrentTenantId();
 
-        // Validate request
-        if (UtilsMehtods.isEmpty(templateRequest.getName()) ||
-            UtilsMehtods.isEmpty(templateRequest.getTempVariables()) ||
-            UtilsMehtods.isEmpty(templateRequest.getMessageTemplate())) {
-            throw new ValidationException(ErrorMessages.TEMPLATE_EMPTY_FIELDS);
-        }
+        // Validate request (presence, sizes, variable keys, placeholder consistency)
+        templateValidator.validate(templateRequest);
 
         // Check for duplicate template name for this tenant (case-insensitive)
         var existingTemplate = templateDao.findByNameIgnoreCaseAndTenantId(
@@ -90,23 +89,22 @@ public class TemplateServiceImpl implements TemplateService {
      *    already uses that name (case-insensitive, names are unique per tenant).
      * 3. Apply updates and save.
      *
-     * @param id the template UUID from path variable
+     * @param id the template ID string (UUID format) from path variable
      * @param templateRequest the template request DTO (same payload as create)
      * @return the updated template
      * @throws ResourceNotFoundException if template with id not found for tenant
      * @throws ValidationException if another template already uses the new name
      */
     @Override
-    public TemplateResponse updateTemplate(UUID id, TemplateRequest templateRequest) {
+    public TemplateResponse updateTemplate(String id, TemplateRequest templateRequest) {
         // Extract tenant ID from context
         var tenantId = UtilsMehtods.getCurrentTenantId();
 
-        // Validate request
-        if (UtilsMehtods.isEmpty(templateRequest.getName()) ||
-            UtilsMehtods.isEmpty(templateRequest.getTempVariables()) ||
-            UtilsMehtods.isEmpty(templateRequest.getMessageTemplate())) {
-            throw new ValidationException(ErrorMessages.TEMPLATE_EMPTY_FIELDS);
-        }
+        // Template IDs are UUIDs at the DB boundary — reject malformed values early
+        validateTemplateId(id);
+
+        // Validate request (presence, sizes, variable keys, placeholder consistency)
+        templateValidator.validate(templateRequest);
 
         // 1. Check template exists for this tenant via id + tenantId
         Template existingTemplate = templateDao.findByIdAndTenantId(id, tenantId)
@@ -120,7 +118,7 @@ public class TemplateServiceImpl implements TemplateService {
                     tenantId
             );
 
-            if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
+            if (duplicate.isPresent() && !duplicate.get().getId().toString().equals(id)) {
                 throw new ValidationException(
                         String.format(ErrorMessages.TEMPLATE_DUPLICATE_NAME,
                                 templateRequest.getName(), tenantId),
@@ -143,19 +141,34 @@ public class TemplateServiceImpl implements TemplateService {
      * Delete a template for the current tenant.
      * Lookup by id + tenantId via DAO — 404 if not found — then delete.
      *
-     * @param id the template UUID from path variable
+     * @param id the template ID string (UUID format) from path variable
      * @throws ResourceNotFoundException if template with id not found for tenant
      */
     @Override
-    public void deleteTemplate(UUID id) {
+    public void deleteTemplate(String id) {
 //        var tenantId = UtilsMehtods.getCurrentTenantId();
 //
 //        Template existingTemplate = templateDao.findByIdAndTenantId(id, tenantId)
 //                .orElseThrow(() -> new ResourceNotFoundException(
 //                        String.format(ErrorMessages.TEMPLATE_NOT_FOUND, id)));
 
+        validateTemplateId(id);
+
         templateDao.delete(id,() -> new ResourceNotFoundException(
                         String.format(ErrorMessages.TEMPLATE_NOT_FOUND, id)));
+    }
+
+    /**
+     * Template IDs are UUIDs at the DB boundary — reject malformed values
+     * before any DAO call so callers get 400 instead of a conversion error.
+     */
+    private void validateTemplateId(String id) {
+        try {
+            UUID.fromString(id);
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidRequestException(
+                    String.format(ErrorMessages.TEMPLATE_INVALID_ID, id), ex);
+        }
     }
 
     @Override

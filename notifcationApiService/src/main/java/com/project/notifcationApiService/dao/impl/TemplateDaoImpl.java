@@ -37,8 +37,8 @@ public class TemplateDaoImpl implements TemplateDao {
     @Override
     public Template save(Template template) {
         Template saved = templateRepository.save(template);
-        cacheService.putById(saved.getTenantId().toString(), saved.getId().toString(), saved);
-        cacheService.putByName(saved.getTenantId().toString(), normalize(saved.getName()), saved);
+        cacheService.putById(saved.getTenantId(), saved.getId().toString(), saved);
+        cacheService.putByName(saved.getTenantId(), normalize(saved.getName()), saved);
         return saved;
     }
 
@@ -48,23 +48,22 @@ public class TemplateDaoImpl implements TemplateDao {
      * case-insensitive semantics.
      *
      * @param name the template name
-     * @param tenantId the tenant UUID
+     * @param tenantId the tenant ID string
      * @return Optional containing template if found
      */
     @Override
-    public Optional<Template> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId) {
-        String tenantKey = tenantId.toString();
+    public Optional<Template> findByNameIgnoreCaseAndTenantId(String name, String tenantId) {
         String nameKey = normalize(name);
 
-        Optional<Template> cached = cacheService.getByName(tenantKey, nameKey, Template.class);
+        Optional<Template> cached = cacheService.getByName(tenantId, nameKey, Template.class);
         if (cached.isPresent()) {
             return cached;
         }
 
         Optional<Template> fromDb = templateRepository.findByNameIgnoreCaseAndTenantId(name, tenantId);
         fromDb.ifPresent(template -> {
-            cacheService.putByName(tenantKey, nameKey, template);
-            cacheService.putById(tenantKey, template.getId().toString(), template);
+            cacheService.putByName(tenantId, nameKey, template);
+            cacheService.putById(tenantId, template.getId().toString(), template);
         });
         return fromDb;
     }
@@ -72,25 +71,23 @@ public class TemplateDaoImpl implements TemplateDao {
     /**
      * Find template by id and tenant ID.
      * Cache-aside: populates both id and name entries on miss.
+     * UUID conversion happens here only, at the DB boundary.
      *
-     * @param id the template UUID from path variable
-     * @param tenantId the tenant UUID
+     * @param id the template ID string (UUID format)
+     * @param tenantId the tenant ID string
      * @return Optional containing template if found
      */
     @Override
-    public Optional<Template> findByIdAndTenantId(UUID id, UUID tenantId) {
-        String tenantKey = tenantId.toString();
-        String idKey = id.toString();
-
-        Optional<Template> cached = cacheService.getById(tenantKey, idKey, Template.class);
+    public Optional<Template> findByIdAndTenantId(String id, String tenantId) {
+        Optional<Template> cached = cacheService.getById(tenantId, id, Template.class);
         if (cached.isPresent()) {
             return cached;
         }
 
-        Optional<Template> fromDb = templateRepository.findByIdAndTenantId(id, tenantId);
+        Optional<Template> fromDb = templateRepository.findByIdAndTenantId(UUID.fromString(id), tenantId);
         fromDb.ifPresent(template -> {
-            cacheService.putById(tenantKey, idKey, template);
-            cacheService.putByName(tenantKey, normalize(template.getName()), template);
+            cacheService.putById(tenantId, id, template);
+            cacheService.putByName(tenantId, normalize(template.getName()), template);
         });
         return fromDb;
     }
@@ -98,21 +95,22 @@ public class TemplateDaoImpl implements TemplateDao {
     /**
      * Delete a template from database and evict its cache entries.
      *
-     * @param template the template entity to delete
+     * @param id the template ID string (UUID format)
+     * @param exceptionSupplier supplies the exception when nothing is found
      */
     @Override
-    public void delete(UUID id, final Supplier<? extends Throwable> exceptionSupplier ) {
+    public void delete(String id, final Supplier<? extends Throwable> exceptionSupplier ) {
             //to delete from cache ...we need to fetch the template first to get its name and tenantId
         findByIdAndTenantId(id, UtilsMehtods.getCurrentTenantId()).ifPresentOrElse(template -> {
-            cacheService.deleteById(template.getTenantId().toString(), template.getId().toString());
-            cacheService.deleteByName(template.getTenantId().toString(), normalize(template.getName()));
+            cacheService.deleteById(template.getTenantId(), template.getId().toString());
+            cacheService.deleteByName(template.getTenantId(), normalize(template.getName()));
         },()->{
             if(UtilsMehtods.isNotEmpty(exceptionSupplier)){
                 exceptionSupplier.get();
             }
         });
 
-        templateRepository.deleteById(id);
+        templateRepository.deleteById(UUID.fromString(id));
         // Note: We don't have the full template here, so we can't evict the cache entries.
         // This is a limitation of the current implementation.
     }

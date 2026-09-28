@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -27,26 +26,27 @@ public interface TemplateDao {
      * Find template by name (case-insensitive) and tenant ID.
      *
      * @param name the template name
-     * @param tenantId the tenant UUID
+     * @param tenantId the tenant ID string
      * @return Optional containing template if found
      */
-    Optional<Template> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId);
+    Optional<Template> findByNameIgnoreCaseAndTenantId(String name, String tenantId);
 
     /**
      * Find template by id and tenant ID.
      *
-     * @param id the template UUID from path variable
-     * @param tenantId the tenant UUID
+     * @param id the template ID string (UUID format)
+     * @param tenantId the tenant ID string
      * @return Optional containing template if found
      */
-    Optional<Template> findByIdAndTenantId(UUID id, UUID tenantId);
+    Optional<Template> findByIdAndTenantId(String id, String tenantId);
 
     /**
      * Delete a template from database.
      *
-     * @param template the template entity to delete
+     * @param id the template ID string (UUID format)
+     * @param exceptionSupplier supplies the exception when nothing is found
      */
-    void delete(UUID id,final Supplier<? extends Throwable> exceptionSupplier);
+    void delete(String id, final Supplier<? extends Throwable> exceptionSupplier);
 
     Page<Template> filterTemplate(Example<Template> example, PageRequest pageRequest);
 }

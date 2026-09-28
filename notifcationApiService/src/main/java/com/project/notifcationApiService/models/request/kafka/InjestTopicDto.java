@@ -1,14 +1,14 @@
 package com.project.notifcationApiService.models.request.kafka;
 
 import com.project.notifcationApiService.models.request.NotificationType;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
-import java.util.UUID;
 
 import static com.project.notifcationApiService.constant.ErrorMessages.NOTIFICATION_TYPE_REQUIRED;
 import static com.project.notifcationApiService.constant.ErrorMessages.TEMPLATE_ID_REQUIRED;
@@ -16,7 +16,8 @@ import static com.project.notifcationApiService.constant.ErrorMessages.TEMPLATE_
 
 
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class InjestTopicDto {
 
@@ -25,8 +26,8 @@ public class InjestTopicDto {
     private String tenantId;
     private Long recivedAt;
 
-    @NotNull(message = TEMPLATE_ID_REQUIRED)
-    private UUID templateId;
+    @NotBlank(message = TEMPLATE_ID_REQUIRED)
+    private String templateId;
     private Map<String, Object> dynamicVariables;
     @NotNull(message = NOTIFICATION_TYPE_REQUIRED)
     private NotificationType notificationType;

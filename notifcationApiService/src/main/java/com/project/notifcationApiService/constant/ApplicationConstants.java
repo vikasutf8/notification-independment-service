@@ -17,7 +17,8 @@ public final class ApplicationConstants {
     public  static final String REQUEST_ID_HEADER = "X-Request-Id";
 
     // Error Messages
-    public static final String TENANT_ID_MISSING = "Unauthorized: X-Tenant-Id header is required.";
+    public static final String TENANT_ID_MISSING = "Forbidden: X-Tenant-Id header is required.";
+    public static final String TENANT_ID_INVALID = "Forbidden: X-Tenant-Id must be a valid UUID.";
     public static final String INVALID_REQUEST_FORMAT = "Invalid request format.";
 
     public static final String TEMPLATES_REDIS_PREFIX = "templates";

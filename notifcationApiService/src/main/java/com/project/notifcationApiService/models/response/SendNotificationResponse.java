@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 /**
  * Response DTO for send-notification API responses.
  * Contains the template reference and the resolved message.
@@ -18,7 +16,7 @@ import java.util.UUID;
 @Builder
 public class SendNotificationResponse {
 
-    private UUID templateId;
+    private String templateId;
 
     private String templateName;
 

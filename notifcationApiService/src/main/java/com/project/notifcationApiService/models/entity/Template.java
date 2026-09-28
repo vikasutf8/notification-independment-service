@@ -12,7 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Map;
 import java.util.UUID;
-
 /**
  * Template entity for storing notification templates in MongoDB.
  * Each template is stored per tenant and contains template variables and message format.
@@ -35,8 +34,8 @@ public class Template extends AbstractEntity {
     @NotBlank(message = "Message template cannot be blank")
     private String messageTemplate;
 
-    @NotNull(message = "Tenant ID cannot be null")
-    private UUID tenantId;
+    @NotBlank(message = "Tenant ID cannot be blank")
+    private String tenantId;
 
     @NotNull(message = " ID cannot be null")
     private UUID id;
