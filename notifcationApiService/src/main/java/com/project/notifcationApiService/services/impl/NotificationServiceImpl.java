@@ -13,7 +13,6 @@ import com.project.notifcationApiService.services.interfaces.NotificationService
 import com.project.notifcationApiService.utils.commonHelper.UtilsMehtods;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,9 +37,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final TemplateDao templateDao;
     private final GenericPublisher genericPublisher;
-
-    @Value("${app.pubsub.kafka.topic:ingest}")
-    private String ingestTopic;
 
     /**
      * Send a notification using a stored template.
@@ -69,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> {
 
                     // Template not found -> publish audit event
-                    genericPublisher.sendDataToAudit(request);
+//                    genericPublisher.sendDataToAudit(request);
 
                     // Then throw exception
                     return new ResourceNotFoundException(

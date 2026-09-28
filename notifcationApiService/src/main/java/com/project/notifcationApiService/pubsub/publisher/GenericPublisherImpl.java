@@ -27,14 +27,17 @@ public class GenericPublisherImpl implements GenericPublisher {
 
     private final List<GenericProvider> providers;
     private final List<GenericFallback> fallbacks;
-    private ObjectMapper mapper;
-    private ApplicationProperties applicationProperties;
+    private final ObjectMapper mapper;
+    private final ApplicationProperties applicationProperties;
 
     public GenericPublisherImpl(ObjectProvider<List<GenericProvider>> providers,
-                                ObjectProvider<List<GenericFallback>> fallbacks, ObjectMapper mapper) {
+                                ObjectProvider<List<GenericFallback>> fallbacks,
+                                ObjectMapper mapper,
+                                ApplicationProperties applicationProperties) {
         this.providers = providers.getIfAvailable(Collections::emptyList);
         this.fallbacks = fallbacks.getIfAvailable(Collections::emptyList);
-        this.mapper =mapper;
+        this.mapper = mapper;
+        this.applicationProperties = applicationProperties;
     }
 
     @Override

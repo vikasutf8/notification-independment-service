@@ -1,7 +1,6 @@
 package com.project.notifcationApiService.config.beanConfig;
 
 import lombok.Data;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,9 +8,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ApplicationProperties {
 
-    @Value("${app.pubsub.kafka.ingest-topic}")
+    @Value("${app.pubsub.kafka.topics.ingest-topic}")
     private String ingestTopic;
 
-    @Value("${app.pubsub.kafka.audit-topic}")
+    @Value("${app.pubsub.kafka.topics.audit-topic}")
     private String auditTopic;
+
+    @Value("${app.pubsub.kafka.send-timeout-ms}")
+    private long sendTimeoutMs;
+
+
 }

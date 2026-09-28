@@ -6,17 +6,27 @@ app:
   pubsub:
     kafka:
       enabled: true
+      bootstrap-servers: localhost:9092
+      retries: 3
+      retry-backoff-ms: 1000
+      acks: all
       send-timeout-ms: 5000
-
       topics:
         ingest-topic: notification.ingest
         audit-topic: notification.audit
 
     sqs:
       enabled: false
-
     mqtt:
       enabled: false
-
     rabbitmq:
       enabled: false
+
+  database:
+    mongodb:
+      uri: "mongodb://localhost:27017"
+      database: notification_db
+      connect-timeout-ms: 5000
+      read-timeout-ms: 5000
+      retry-writes: true
+      retry-reads: true
