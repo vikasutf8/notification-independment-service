@@ -1,6 +1,7 @@
 package com.project.notifcationApiService.services.impl;
 
 import com.project.notifcationApiService.constant.ErrorMessages;
+import com.project.notifcationApiService.dao.interfaces.CacheService;
 import com.project.notifcationApiService.dao.interfaces.TemplateDao;
 import com.project.notifcationApiService.exception.ResourceNotFoundException;
 import com.project.notifcationApiService.exception.ValidationException;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class TemplateServiceImpl implements TemplateService {
 
     private final TemplateDao templateDao;
+
 
     /**
      * Create a new template for the current tenant.
@@ -146,13 +148,14 @@ public class TemplateServiceImpl implements TemplateService {
      */
     @Override
     public void deleteTemplate(UUID id) {
-        var tenantId = UtilsMehtods.getCurrentTenantId();
+//        var tenantId = UtilsMehtods.getCurrentTenantId();
+//
+//        Template existingTemplate = templateDao.findByIdAndTenantId(id, tenantId)
+//                .orElseThrow(() -> new ResourceNotFoundException(
+//                        String.format(ErrorMessages.TEMPLATE_NOT_FOUND, id)));
 
-        Template existingTemplate = templateDao.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(
+        templateDao.delete(id,() -> new ResourceNotFoundException(
                         String.format(ErrorMessages.TEMPLATE_NOT_FOUND, id)));
-
-        templateDao.delete(existingTemplate);
     }
 
     @Override

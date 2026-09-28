@@ -20,5 +20,5 @@ public final class ApplicationConstants {
     public static final String TENANT_ID_MISSING = "Unauthorized: X-Tenant-Id header is required.";
     public static final String INVALID_REQUEST_FORMAT = "Invalid request format.";
 
-
+    public static final String TEMPLATES_REDIS_PREFIX = "templates";
 }
