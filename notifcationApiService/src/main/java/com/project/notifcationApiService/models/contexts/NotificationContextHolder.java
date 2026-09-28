@@ -1,5 +1,7 @@
 package com.project.notifcationApiService.models.contexts;
 
+import java.util.UUID;
+
 /**
  * Context holder for managing NotificationContext using ThreadLocal.
  * Provides static utility methods to store, retrieve, and clear context data.
@@ -39,5 +41,17 @@ public class NotificationContextHolder {
      */
     public static void clearContext() {
         CONTEXT_THREAD_LOCAL.remove();
+    }
+
+    public static void ignoreTenantIdInjections() {
+        UUID tenantId = CONTEXT_THREAD_LOCAL.get().tenantId();
+        CONTEXT_THREAD_LOCAL.set(new NotificationContext(tenantId, true));
+
+    }
+
+    public static void ignoreTenantIdInjections(final boolean ignoreTenantId) {
+        UUID tenantId = CONTEXT_THREAD_LOCAL.get().tenantId();
+        CONTEXT_THREAD_LOCAL.set(new NotificationContext(tenantId, ignoreTenantId));
+
     }
 }

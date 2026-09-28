@@ -3,6 +3,8 @@ package com.project.notifcationApiService.services.impl;
 import com.project.notifcationApiService.constant.ErrorMessages;
 import com.project.notifcationApiService.dao.interfaces.TemplateDao;
 import com.project.notifcationApiService.exception.ValidationException;
+import com.project.notifcationApiService.models.contexts.NotificationContext;
+import com.project.notifcationApiService.models.contexts.NotificationContextHolder;
 import com.project.notifcationApiService.models.entity.Template;
 import com.project.notifcationApiService.models.request.TemplateFilterRequest;
 import com.project.notifcationApiService.models.request.TemplateRequest;
@@ -80,7 +82,8 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     public FilterTemplateResponse filterTemplates(TemplateFilterRequest templateFilterRequest) throws ReflectiveOperationException {
-
+    //ignore tenant based searching
+        NotificationContextHolder.ignoreTenantIdInjections();
 Page<Template> templates =  templateDao.filterTemplate(templateFilterRequest.buildSearchExample(),
                 templateFilterRequest.buildPageRequest());
         List<TemplateResponse> data =templates.stream().map(TemplateResponse::new).collect(Collectors.toList());

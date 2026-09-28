@@ -1,10 +1,12 @@
 package com.project.notifcationApiService.models.request;
 
 import com.project.notifcationApiService.exception.ValidationException;
+import com.project.notifcationApiService.models.contexts.NotificationContextHolder;
 import com.project.notifcationApiService.utils.commonHelper.UtilsMehtods;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +17,7 @@ import java.lang.reflect.Modifier;
 
 import static java.util.Optional.ofNullable;
 
+@Slf4j
 public abstract class BaseSearchDto<T> {
 
 
@@ -125,6 +128,12 @@ public abstract class BaseSearchDto<T> {
     }
 
     private void injectTenantId(Object instance) throws NoSuchFieldException {
+
+        if(NotificationContextHolder.getContext().ignoreTenantIdInjections()){
+            log.info("Ignoring tenantId injection for class: {}", instance.getClass().getName());
+            return;
+        }
+
         // how to get --get field
             Field tenantIdField = findField(instance.getClass(), "tenantId");
             tenantIdField.setAccessible(true);
